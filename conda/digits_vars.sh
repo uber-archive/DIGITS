@@ -18,7 +18,7 @@ if [ ! -d "$DATA_DIR/static" ]; then
   cp -r $DIGITS_HOME/digits/static/* $DATA_DIR/static/.
 fi
 
-cp $DIGITS_HOME/conda/digits.site $DATA_DIR/.
+cp $DIGITS_HOME/conda/* $DATA_DIR/.
 sed -i "s+DIGIT_HOME_PLACE_HOLDER+$DIGITS_HOME+" $DATA_DIR/digits.site
 sed -i "s+DIGIT_DATA_PLACE_HOLDER+$DATA_DIR+" $DATA_DIR/digits.site
 
