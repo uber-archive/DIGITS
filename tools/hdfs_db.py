@@ -94,8 +94,8 @@ def download_and_analyze_db(h5textfile, h5directory,
 
     # start the download
     threads=[]
-    explore_r = min(16,len(h5files_list))
-    for j in range(16):
+    explore_r = min(4,len(h5files_list))
+    for j in range(4):
         #cmd = 'export PATH=/usr/local/hadoop/bin:/usr/local/hadoop/sbin:$PATH && hdfs dfs -get '+ f + ' ' + dirh5
         #os.system(cmd)
         f = h5files_list[j]
