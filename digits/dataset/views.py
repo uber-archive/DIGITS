@@ -33,6 +33,8 @@ def show(job_id):
             return dataset_images.classification.views.show(job, related_jobs=related_jobs)
         elif isinstance(job, dataset_images.GenericImageDatasetJob):
             return dataset_images.generic.views.show(job, related_jobs=related_jobs)
+        elif isinstance(job, dataset_images.HdfsImageDatasetJob):
+            return dataset_images.hdfs.views.show(job, related_jobs=related_jobs)
         elif isinstance(job, generic.GenericDatasetJob):
             return generic.views.show(job, related_jobs=related_jobs)
         else:
@@ -49,6 +51,8 @@ def summary():
         return dataset_images.classification.views.summary(job)
     elif isinstance(job, dataset_images.GenericImageDatasetJob):
         return dataset_images.generic.views.summary(job)
+    elif isinstance(job, dataset_images.HdfsImageDatasetJob):
+        return dataset_images.hdfs.views.summary(job)
     elif isinstance(job, generic.GenericDatasetJob):
         return generic.views.summary(job)
     else:

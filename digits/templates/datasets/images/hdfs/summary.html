@@ -1,0 +1,28 @@
+{# Copyright (c) 2015-2016, NVIDIA CORPORATION.  All rights reserved. #}
+<h4>
+    <a href="{{url_for('digits.views.show_job', job_id=dataset.id())}}" target="_blank">
+        {{dataset.name()}}
+    </a>
+</h4>
+<p>
+<span class="text -{{dataset.status.css}}">{{dataset.status.name}}</span>
+{% if not dataset.status.is_running() %}
+<small>
+    {{dataset.status_history[-1][1]|print_time}}
+</small>
+{% endif %}
+</p>
+<ul>
+    <li>DB backend: {{dataset.get_backend()}}</li>
+    {% for task in dataset.analyze_db_tasks() %}
+    <li>{{task.name()}}</li>
+    <ul>
+        <li><b>H5 File Count</b> - {{task.h5_file_count}}</li>
+        <li><b>Image Count</b> - {{task.image_count}}</li>
+        {% for key, value in task.data_dimensions.items() %}
+        <li><b>{{ key }} Dimensions</b> -
+        {{value[0]}}x{{value[1]}}x{{value[2]}}</li>
+        {% endfor %}
+    </ul>
+    {% endfor %}
+</ul>
