@@ -1,5 +1,4 @@
 # Ignore these file types
-*.cfg
 *.log
 *.pyc
 *.swp
