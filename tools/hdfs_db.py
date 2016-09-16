@@ -28,11 +28,10 @@ from digits import log
 
 logger = logging.getLogger('digits.tools.hdfs_db')
 
+ENVROOT=os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+CONFIGFILE=os.path.join(ENVROOT,'etc/hadoop/')
 
-
-CONFIGFILE=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CONFIGFILE=os.path.join(CONFIGFILE,'opuspro_hdfs')
-EXPORT='export PATH=/usr/local/hadoop/bin:/usr/local/hadoop/sbin:$PATH && export JAVA_HOME=/usr '
+EXPORT='export PATH='+ENVROOT+'/bin:'+ ENVROOT +'/sbin:$PATH && export JAVA_HOME='+ENVROOT
 HDFSGET=EXPORT+' && hdfs --config '+ CONFIGFILE +' dfs -get '
 HDFSLS=EXPORT+' && hdfs --config '+ CONFIGFILE +' dfs -ls '
 
@@ -259,7 +258,7 @@ if __name__ == '__main__':
     if main(args['h5files'],
                   args['database'],
                   args['h5key'],
-            only_count = args['only_count'],
+                    only_count = args['only_count'],
             force_same_shape = args['force_same_shape'],
             ):
         sys.exit(0)
