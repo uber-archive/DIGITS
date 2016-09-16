@@ -64,6 +64,11 @@ def home(tab=2):
                     'url': flask.url_for(
                         'digits.dataset.images.generic.views.new'),
                     },
+                'image-hdfs': {
+                    'title': 'HDFS - HDF5',
+                    'url': flask.url_for(
+                        'digits.dataset.images.hdfs.views.new'),
+                    },
                 },
             }
 
@@ -560,6 +565,8 @@ def clone_job(clone):
         return flask.redirect(flask.url_for('digits.dataset.images.classification.views.new') + '?clone=' + clone)
     if isinstance(job, dataset.GenericImageDatasetJob):
         return flask.redirect(flask.url_for('digits.dataset.images.generic.views.new') + '?clone=' + clone)
+    if isinstance(job, dataset.HdfsImageDatasetJob):
+        return flask.redirect(flask.url_for('digits.dataset.images.hdfs.views.new') + '?clone=' + clone)
     if isinstance(job, model.ImageClassificationModelJob):
         return flask.redirect(flask.url_for('digits.model.images.classification.views.new') + '?clone=' + clone)
     if isinstance(job, model.GenericImageModelJob):

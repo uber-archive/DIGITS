@@ -49,6 +49,8 @@ import digits.dataset.images.classification.views
 app.register_blueprint(digits.dataset.images.classification.views.blueprint, url_prefix='/datasets/images/classification')
 import digits.dataset.images.generic.views
 app.register_blueprint(digits.dataset.images.generic.views.blueprint, url_prefix='/datasets/images/generic')
+import digits.dataset.images.hdfs.views
+app.register_blueprint(digits.dataset.images.hdfs.views.blueprint, url_prefix='/datasets/images/hdfs')
 import digits.model.views
 app.register_blueprint(digits.model.views.blueprint, url_prefix='/models')
 import digits.model.images.views
