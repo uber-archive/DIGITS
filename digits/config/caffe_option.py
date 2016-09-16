@@ -296,6 +296,26 @@ class CaffeOption(config_option.FrameworkOption):
             # Show only "ERROR" and "FATAL"
             os.environ['GLOG_minloglevel'] = '2'
 
+            filepath = os.path.abspath(__file__)
+            digits_dir = os.path.dirname(os.path.dirname(os.path.dirname(filepath)))
+            env_dir = os.path.dirname(digits_dir)
+
+            os.environ['JAVA_HOME']=env_dir
+            os.environ['HADOOP_PREFIX']=env_dir
+            sys.path.append(os.environ['HADOOP_PREFIX'])
+            list_of_files = []
+            jarpath = os.path.join(os.environ['HADOOP_PREFIX'], 'share', 'hadoop', 'hdfs')
+            for (dirpath, dirnames, filenames) in os.walk(jarpath):
+                for filename in filenames:
+                    if filename.endswith('.jar'):
+                        list_of_files.append( os.path.join(dirpath, filename) )
+            jarpath = os.path.join(os.environ['HADOOP_PREFIX'], 'share', 'hadoop', 'common')
+            for (dirpath, dirnames, filenames) in os.walk(jarpath):
+                for filename in filenames:
+                    if filename.endswith('.jar'):
+                        list_of_files.append( os.path.join(dirpath, filename) )
+            os.environ['CLASSPATH']=':'.join(list_of_files)
+
             if self._config_file_value != '<PATHS>':
                 # Add caffe/python to PATH
                 p = os.path.join(self._config_file_value, 'python')
