@@ -115,7 +115,7 @@ class HdfsImageDatasetJob(ImageDatasetJob):
         if stage == 'train':
             c = constants.TRAIN_DB
         else:
-            c = constants.TEST_DB
+            c = constants.VAL_DB
 
         db_task = self.analyze_db_task(c)
         return db_task.get_h5_file_fields()
