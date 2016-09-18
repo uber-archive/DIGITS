@@ -667,9 +667,9 @@ class CaffeTrainTask(TrainTask):
             train_image_data_layer = self.make_generic_data_layer(
                 train_feature_db_path, train_image_data_layer, 'data', 'data', caffe_pb2.TRAIN)
         else:
-            #t_keys = self.dataset.get_h5_fields('train')
-            self.logger.warning(str(self.dataset.__class__))
-            t_keys = ['data','label']
+            t_keys = self.dataset.get_h5_fields('train')
+            #self.logger.warning(str(self.dataset.__class__))
+            #t_keys = ['data','label']
             train_image_data_layer = self.make_h5_data_layer(
                 train_feature_db_path, train_image_data_layer, 'data', t_keys, caffe_pb2.TRAIN)
         if train_image_data_layer is not None:
@@ -686,9 +686,9 @@ class CaffeTrainTask(TrainTask):
             val_image_data_layer = self.make_generic_data_layer(
                 val_feature_db_path, val_image_data_layer, 'data', 'data', caffe_pb2.TEST)
         else:
-            #t_keys = self.dataset.get_h5_fields('val')
-            self.logger.warning(self.dataset.get_backend())
-            t_keys = ['data','label']
+            t_keys = self.dataset.get_h5_fields('val')
+            #self.logger.warning(self.dataset.get_backend())
+            #t_keys = ['data','label']
             val_image_data_layer = self.make_h5_data_layer(
                 val_feature_db_path, val_image_data_layer, 'data', t_keys, caffe_pb2.TEST)
         if val_image_data_layer is not None:
