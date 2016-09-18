@@ -13,7 +13,7 @@ from .job import GenericImageModelJob
 from digits.pretrained_model.job import PretrainedModelJob
 from digits import extensions, frameworks, utils
 from digits.config import config_value
-from digits.dataset import GenericDatasetJob, GenericImageDatasetJob
+from digits.dataset import GenericDatasetJob, GenericImageDatasetJob, HdfsImageDatasetJob
 from digits.inference import ImageInferenceJob
 from digits.status import Status
 from digits.utils import filesystem as fs
@@ -609,7 +609,8 @@ def get_datasets(extension_id):
                 and (j.status.is_running() or j.status == Status.DONE)]
     else:
         jobs = [j for j in scheduler.jobs.values()
-                if (isinstance(j, GenericImageDatasetJob) or isinstance(j, GenericDatasetJob))
+                if (isinstance(j, GenericImageDatasetJob) or isinstance(j, GenericDatasetJob)
+                or isinstance(j, HdfsImageDatasetJob))
                 and (j.status.is_running() or j.status == Status.DONE)]
     return [(j.id(), j.name())
             for j in sorted(jobs, cmp=lambda x, y: cmp(y.id(), x.id()))]

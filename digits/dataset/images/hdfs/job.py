@@ -110,3 +110,13 @@ class HdfsImageDatasetJob(ImageDatasetJob):
     @override
     def job_type(self):
         return 'Hdfs Image Dataset'
+
+    def get_h5_fields(self, stage='train'):
+        if stage == 'train':
+            c = constants.TRAIN_DB
+        else:
+            c = constants.TEST_DB
+
+        db_task = self.analyze_db_task(c)
+        return db_task.h5_file_fields
+

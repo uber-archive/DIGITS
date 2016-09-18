@@ -38,6 +38,9 @@ CAFFE_TRAIN_VAL_FILE = 'train_val.prototxt'
 CAFFE_SNAPSHOT_PREFIX = 'snapshot'
 CAFFE_DEPLOY_FILE = 'deploy.prototxt'
 
+HDFS_ENV = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+HDFS_CONFIG_PATH = os.path.join(HDFS_ENV,'etc/hadoop')
+
 @subclass
 class DigitsTransformer(caffe.io.Transformer):
     """
@@ -214,6 +217,9 @@ class CaffeTrainTask(TrainTask):
             self.save_files_classification()
         elif isinstance(self.job, digits.model.images.generic.GenericImageModelJob):
             self.save_files_generic()
+        elif isinstance(self.job, digits.model.images.generic.GenericImageModelJob)\
+                and isinstance(self.dataset, digits.dataset.images.hdfs.HdfsImageDatasetJob):
+            self.save_files_generic(generic_or_hdfs='hdfs')
         else:
             raise NotImplementedError
 
@@ -342,12 +348,12 @@ class CaffeTrainTask(TrainTask):
             if dataset_backend == 'lmdb':
                 assert train_data_layer.type == 'Data', 'expecting a Data layer'
             elif dataset_backend == 'hdf5':
-                assert train_data_layer.type == 'HDF5Data', 'expecting an HDF5Data layer'
+                assert train_data_layer.type == 'HDFSHDF5Data', 'expecting an HDFSHDF5Data layer'
             if dataset_backend == 'lmdb' and train_data_layer.HasField('data_param'):
                 assert not train_data_layer.data_param.HasField('source'), "don't set the data_param.source"
                 assert not train_data_layer.data_param.HasField('backend'), "don't set the data_param.backend"
-            if dataset_backend == 'hdf5' and train_data_layer.HasField('hdf5_data_param'):
-                assert not train_data_layer.hdf5_data_param.HasField('source'), "don't set the hdf5_data_param.source"
+            if dataset_backend == 'hdf5' and train_data_layer.HasField('hdfshdf5_data_param'):
+                assert not train_data_layer.hdfshdf5_data_param.HasField('source'), "don't set the hdfshdf5_data_param.source"
             max_crop_size = min(self.dataset.get_feature_dims()[0], self.dataset.get_feature_dims()[1])
             if self.crop_size:
                 assert dataset_backend != 'hdf5', 'HDF5Data layer does not support cropping'
@@ -366,12 +372,12 @@ class CaffeTrainTask(TrainTask):
                 if dataset_backend == 'lmdb':
                     assert val_data_layer.type == 'Data', 'expecting a Data layer'
                 elif dataset_backend == 'hdf5':
-                    assert val_data_layer.type == 'HDF5Data', 'expecting an HDF5Data layer'
+                    assert val_data_layer.type == 'HDFSHDF5Data', 'expecting an HDFSHDF5Data layer'
                 if dataset_backend == 'lmdb' and val_data_layer.HasField('data_param'):
                     assert not val_data_layer.data_param.HasField('source'), "don't set the data_param.source"
                     assert not val_data_layer.data_param.HasField('backend'), "don't set the data_param.backend"
-                if dataset_backend == 'hdf5' and val_data_layer.HasField('hdf5_data_param'):
-                    assert not val_data_layer.hdf5_data_param.HasField('source'), "don't set the hdf5_data_param.source"
+                if dataset_backend == 'hdf5' and val_data_layer.HasField('hdfshdf5_data_param'):
+                    assert not val_data_layer.hdfshdf5_data_param.HasField('source'), "don't set the hdfshdf5_data_param.source"
                 if self.crop_size:
                     # use our error checking from the train layer
                     val_data_layer.transform_param.crop_size = self.crop_size
@@ -380,7 +386,7 @@ class CaffeTrainTask(TrainTask):
         else:
             layer_type = 'Data'
             if dataset_backend == 'hdf5':
-                layer_type = 'HDF5Data'
+                layer_type = 'HDFSHDF5Data'
             train_data_layer = train_val_network.layer.add(type = layer_type, name = 'data')
             train_data_layer.top.append('data')
             train_data_layer.top.append('label')
@@ -388,7 +394,7 @@ class CaffeTrainTask(TrainTask):
             if dataset_backend == 'lmdb':
                 train_data_layer.data_param.batch_size = constants.DEFAULT_BATCH_SIZE
             elif dataset_backend == 'hdf5':
-                train_data_layer.hdf5_data_param.batch_size = constants.DEFAULT_BATCH_SIZE
+                train_data_layer.hdfshdf5_data_param.batch_size = constants.DEFAULT_BATCH_SIZE
             if self.crop_size:
                 assert dataset_backend != 'hdf5', 'HDF5Data layer does not support cropping'
                 train_data_layer.transform_param.crop_size = self.crop_size
@@ -400,7 +406,7 @@ class CaffeTrainTask(TrainTask):
                 if dataset_backend == 'lmdb':
                     val_data_layer.data_param.batch_size = constants.DEFAULT_BATCH_SIZE
                 elif dataset_backend == 'hdf5':
-                    val_data_layer.hdf5_data_param.batch_size = constants.DEFAULT_BATCH_SIZE
+                    val_data_layer.hdfshdf5_data_param.batch_size = constants.DEFAULT_BATCH_SIZE
                 if self.crop_size:
                     val_data_layer.transform_param.crop_size = self.crop_size
         if dataset_backend == 'lmdb':
@@ -410,12 +416,12 @@ class CaffeTrainTask(TrainTask):
                 val_data_layer.data_param.source = self.dataset.get_feature_db_path(constants.VAL_DB)
                 val_data_layer.data_param.backend = caffe_pb2.DataParameter.LMDB
         elif dataset_backend == 'hdf5':
-            train_data_layer.hdf5_data_param.source = os.path.join(self.dataset.get_feature_db_path(constants.TRAIN_DB), 'list.txt')
+            train_data_layer.hdfshdf5_data_param.source = os.path.join(self.dataset.get_feature_db_path(constants.TRAIN_DB), 'list.txt')
             if val_data_layer is not None and has_val_set:
-                val_data_layer.hdf5_data_param.source = os.path.join(self.dataset.get_feature_db_path(constants.VAL_DB), 'list.txt')
+                val_data_layer.hdfshdf5_data_param.source = os.path.join(self.dataset.get_feature_db_path(constants.VAL_DB), 'list.txt')
 
         if self.use_mean == 'pixel':
-            assert dataset_backend != 'hdf5', 'HDF5Data layer does not support mean subtraction'
+            assert dataset_backend != 'hdf5', 'HDFSHDF5Data layer does not support mean subtraction'
             mean_pixel = self.get_mean_pixel(self.dataset.path(self.dataset.get_mean_file()))
             self.set_mean_value(train_data_layer, mean_pixel)
             if val_data_layer is not None and has_val_set:
@@ -432,9 +438,9 @@ class CaffeTrainTask(TrainTask):
                 if val_data_layer is not None and has_val_set:
                     val_data_layer.data_param.batch_size = self.batch_size
             elif dataset_backend == 'hdf5':
-                train_data_layer.hdf5_data_param.batch_size = self.batch_size
+                train_data_layer.hdfshdf5_data_param.batch_size = self.batch_size
                 if val_data_layer is not None and has_val_set:
-                    val_data_layer.hdf5_data_param.batch_size = self.batch_size
+                    val_data_layer.hdfshdf5_data_param.batch_size = max( int(self.batch_size/4) , 1)
         else:
             if dataset_backend == 'lmdb':
                 if not train_data_layer.data_param.HasField('batch_size'):
@@ -442,10 +448,10 @@ class CaffeTrainTask(TrainTask):
                 if val_data_layer is not None and has_val_set and not val_data_layer.data_param.HasField('batch_size'):
                     val_data_layer.data_param.batch_size = constants.DEFAULT_BATCH_SIZE
             elif dataset_backend == 'hdf5':
-                if not train_data_layer.hdf5_data_param.HasField('batch_size'):
-                    train_data_layer.hdf5_data_param.batch_size = constants.DEFAULT_BATCH_SIZE
-                if val_data_layer is not None and has_val_set and not val_data_layer.hdf5_data_param.HasField('batch_size'):
-                    val_data_layer.hdf5_data_param.batch_size = constants.DEFAULT_BATCH_SIZE
+                if not train_data_layer.hdfshdf5_data_param.HasField('batch_size'):
+                    train_data_layer.hdfshdf5_data_param.batch_size = constants.DEFAULT_BATCH_SIZE
+                if val_data_layer is not None and has_val_set and not val_data_layer.hdfshdf5_data_param.HasField('batch_size'):
+                    val_data_layer.hdfshdf5_data_param.batch_size = max(int(constants.DEFAULT_BATCH_SIZE/4) , 1)
 
         # Non-data layers
         train_val_network.MergeFrom(train_val_layers)
@@ -516,7 +522,7 @@ class CaffeTrainTask(TrainTask):
             solver.iter_size = self.batch_accumulation
 
         # Epochs -> Iterations
-        train_iter = int(math.ceil(float(self.dataset.get_entry_count(constants.TRAIN_DB)) / train_data_layer.data_param.batch_size))
+        train_iter = int(math.ceil(float(self.dataset.get_entry_count(constants.TRAIN_DB)) / max(train_data_layer.data_param.batch_size,1)))
         solver.max_iter = train_iter * self.train_epochs
         snapshot_interval = self.snapshot_interval * train_iter
         if 0 < snapshot_interval <= 1:
@@ -527,7 +533,7 @@ class CaffeTrainTask(TrainTask):
             solver.snapshot = 0 # only take one snapshot at the end
 
         if has_val_set and self.val_interval:
-            solver.test_iter.append(int(math.ceil(float(self.dataset.get_entry_count(constants.VAL_DB)) / val_data_layer.data_param.batch_size)))
+            solver.test_iter.append(int(math.ceil(float(self.dataset.get_entry_count(constants.VAL_DB))/100 / max(val_data_layer.data_param.batch_size,1))))
             val_interval = self.val_interval * train_iter
             if 0 < val_interval <= 1:
                 solver.test_interval = 1 # don't round down
@@ -598,7 +604,7 @@ class CaffeTrainTask(TrainTask):
 
         return True
 
-    def save_files_generic(self):
+    def save_files_generic(self, generic_or_hdfs='generic'):
         """
         Save solver, train_val and deploy files to disk
         """
@@ -606,6 +612,7 @@ class CaffeTrainTask(TrainTask):
         train_label_db_path = self.dataset.get_label_db_path(constants.TRAIN_DB)
         val_feature_db_path = self.dataset.get_feature_db_path(constants.VAL_DB)
         val_label_db_path = self.dataset.get_label_db_path(constants.VAL_DB)
+
 
         assert train_feature_db_path is not None, 'Training images are required'
 
@@ -656,23 +663,36 @@ class CaffeTrainTask(TrainTask):
 
         # Create and add the Data layers
         # (uses info from existing data layers, where possible)
-        train_image_data_layer = self.make_generic_data_layer(
-            train_feature_db_path, train_image_data_layer, 'data', 'data', caffe_pb2.TRAIN)
+        if generic_or_hdfs=='generic':
+            train_image_data_layer = self.make_generic_data_layer(
+                train_feature_db_path, train_image_data_layer, 'data', 'data', caffe_pb2.TRAIN)
+        else:
+            t_keys = self.dataset.get_h5_fields('train')
+            train_image_data_layer = self.make_h5_data_layer(
+                train_feature_db_path, train_image_data_layer, 'data', t_keys, caffe_pb2.TRAIN)
         if train_image_data_layer is not None:
             train_val_network.layer.add().CopyFrom(train_image_data_layer)
 
-        train_label_data_layer = self.make_generic_data_layer(
-            train_label_db_path, train_label_data_layer, 'label', 'label', caffe_pb2.TRAIN)
+
+        if generic_or_hdfs=='generic':
+            train_label_data_layer = self.make_generic_data_layer(
+                train_label_db_path, train_label_data_layer, 'label', 'label', caffe_pb2.TRAIN)
         if train_label_data_layer is not None:
             train_val_network.layer.add().CopyFrom(train_label_data_layer)
 
-        val_image_data_layer = self.make_generic_data_layer(
-            val_feature_db_path, val_image_data_layer, 'data', 'data', caffe_pb2.TEST)
+        if generic_or_hdfs=='generic':
+            val_image_data_layer = self.make_generic_data_layer(
+                val_feature_db_path, val_image_data_layer, 'data', 'data', caffe_pb2.TEST)
+        else:
+            t_keys = self.dataset.get_h5_fields('val')
+            val_image_data_layer = self.make_h5_data_layer(
+                val_feature_db_path, val_image_data_layer, 'data', t_keys, caffe_pb2.TEST)
         if val_image_data_layer is not None:
             train_val_network.layer.add().CopyFrom(val_image_data_layer)
 
-        val_label_data_layer = self.make_generic_data_layer(
-            val_label_db_path, val_label_data_layer, 'label', 'label', caffe_pb2.TEST)
+        if generic_or_hdfs=='generic':
+            val_label_data_layer = self.make_generic_data_layer(
+                val_label_db_path, val_label_data_layer, 'label', 'label', caffe_pb2.TEST)
         if val_label_data_layer is not None:
             train_val_network.layer.add().CopyFrom(val_label_data_layer)
 
@@ -741,7 +761,7 @@ class CaffeTrainTask(TrainTask):
             solver.iter_size = self.batch_accumulation
 
         # Epochs -> Iterations
-        train_iter = int(math.ceil(float(self.dataset.get_entry_count(constants.TRAIN_DB)) / train_image_data_layer.data_param.batch_size))
+        train_iter = int(math.ceil(float(self.dataset.get_entry_count(constants.TRAIN_DB)) / max(train_image_data_layer.data_param.batch_size,1)))
         solver.max_iter = train_iter * self.train_epochs
         snapshot_interval = self.snapshot_interval * train_iter
         if 0 < snapshot_interval <= 1:
@@ -752,7 +772,7 @@ class CaffeTrainTask(TrainTask):
             solver.snapshot = 0 # only take one snapshot at the end
 
         if val_image_data_layer:
-            solver.test_iter.append(int(math.ceil(float(self.dataset.get_entry_count(constants.VAL_DB)) / val_image_data_layer.data_param.batch_size)))
+            solver.test_iter.append(int(math.ceil(float(self.dataset.get_entry_count(constants.VAL_DB))/ 100 / max(val_image_data_layer.data_param.batch_size,1))))
             val_interval = self.val_interval * train_iter
             if 0 < val_interval <= 1:
                 solver.test_interval = 1 # don't round down
@@ -807,7 +827,7 @@ class CaffeTrainTask(TrainTask):
         # Display 8x per epoch, or once per 5000 images, whichever is more frequent
         solver.display = max(1, min(
                 int(math.floor(float(solver.max_iter) / (self.train_epochs * 8))),
-                int(math.ceil(5000.0 / train_image_data_layer.data_param.batch_size))
+                int(math.ceil(5000.0 / max(train_image_data_layer.data_param.batch_size,1)))
                 ))
 
         if self.random_seed is not None:
@@ -1616,6 +1636,43 @@ class CaffeTrainTask(TrainTask):
                                                      "using an include directive to limit the scope of this layer." % (
                                                        layer.name, bottom, "TRAIN" if phase == caffe_pb2.TRAIN else "TEST"))
 
+    def make_h5_data_layer(self, db_path, orig_layer, name, tops, phase):
+        """
+        Utility within save_files_generic for creating a Data layer
+        Returns a LayerParameter (or None)
+
+        Arguments:
+        db -- an AnalyzeDbTask (or None)
+        orig_layer -- a LayerParameter supplied by the user (or None)
+
+        """
+
+        if db_path is None:
+            return None
+
+        layer = caffe_pb2.LayerParameter()
+        #if orig_layer is not None:
+        #    layer.CopyFrom(orig_layer)
+        layer.type = 'HDFSHDF5Data'
+        layer.name = name
+        for t in tops:
+            layer.top.append(t)
+        layer.include.add(phase=phase)
+        layer.hdfshdf5_data_param.source = db_path
+        layer.hdfshdf5_data_param.hdfs_config_dir = HDFS_CONFIG_PATH
+
+        if phase == caffe_pb2.TEST:
+            ratio = 4
+        else:
+            ratio =1
+
+        if not layer.data_param.HasField('batch_size'):
+            layer.data_param.batch_size = int(np.ceil( float(constants.DEFAULT_BATCH_SIZE)/ratio))
+        if self.batch_size:
+            layer.data_param.batch_size = int(np.ceil( float(self.batch_size)/ratio))
+        layer.hdfshdf5_data_param.batch_size = layer.data_param.batch_size
+
+        return layer
 
 def cleanedUpClassificationNetwork(original_network, num_categories):
     """
