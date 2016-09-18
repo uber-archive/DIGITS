@@ -118,5 +118,5 @@ class HdfsImageDatasetJob(ImageDatasetJob):
             c = constants.TEST_DB
 
         db_task = self.analyze_db_task(c)
-        return db_task.h5_file_fields
+        return db_task.get_h5_file_fields()
 

@@ -178,3 +178,6 @@ class HdfsDbTask(Task):
             return 'COLOR'
         else:
             return '%s-channel' % self.image_channels
+
+    def get_h5_file_fields(self):
+        return self.h5_file_fields
