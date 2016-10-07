@@ -776,7 +776,12 @@ class CaffeTrainTask(TrainTask):
             solver.snapshot = 0 # only take one snapshot at the end
 
         if val_image_data_layer:
-            solver.test_iter.append(int(math.ceil(float(self.dataset.get_entry_count(constants.VAL_DB))/ 100 / max(val_image_data_layer.data_param.batch_size,1))))
+            loc_test_iter = int(math.ceil(float(self.dataset.get_entry_count(constants.VAL_DB))/ 100 / max(val_image_data_layer.data_param.batch_size,1)))
+            if loc_test_iter < 50:
+                loc_test_iter = int(math.ceil(float(self.dataset.get_entry_count(constants.VAL_DB))/ 10 / max(val_image_data_layer.data_param.batch_size,1)))
+            if loc_test_iter < 50:
+                loc_test_iter = int(math.ceil(float(self.dataset.get_entry_count(constants.VAL_DB)) / max(val_image_data_layer.data_param.batch_size,1)))
+            solver.test_iter.append(loc_test_iter)
             val_interval = self.val_interval * train_iter
             if 0 < val_interval <= 1:
                 solver.test_interval = 1 # don't round down
